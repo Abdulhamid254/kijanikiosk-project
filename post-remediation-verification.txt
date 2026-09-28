@@ -1,0 +1,30 @@
+=== File Permissions After Logrotate ===
+total 12
+drwxrwx---+2 root   kijanikiosk 4096 Sep 28 11:15 .
+drwxr-xr-x 3 root   root        4096 Sep 28 06:54 ..
+-rw-rw----+1 kk-api kijanikiosk    0 Sep 28 21:38 test-write.tmp
+
+=== FACL Inheritance Properties ===
+# file: opt/kijanikiosk/shared/logs/
+# owner: root
+# group: kijanikiosk
+user::rwx
+user:kk-logs:rwx
+user:kk-payments:rw-
+user:kk-api:rwx
+group::r-x
+group:kijanikiosk:r-x
+mask::rwx
+other::---
+default:user::rwx
+default:user:kk-logs:rwx
+default:user:kk-payments:rw-
+default:user:kk-api:rwx
+default:group::r-x
+default:group:kijanikiosk:r-x
+default:mask::rwx
+default:other::---
+
+
+=== Definitive Write Test ===
+PASS: kk-api can write after logrotate
