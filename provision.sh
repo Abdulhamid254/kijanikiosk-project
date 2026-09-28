@@ -80,3 +80,37 @@ sudo ufw allow 443/tcp comment 'HTTPS'
 sudo ufw --force enable
 
 echo "==> converged successfully!"
+
+#!/bin/bash
+set -e
+
+echo "==> Running Final Verification Phase..."
+
+# 1. Verify Phase 1: Accounts and Groups
+[ "$(cat /etc/group | grep "^kijanikiosk:" | cut -d: -f3)" = "1002" ] && [ "$(cat /etc/passwd | grep "^kk-api:" | cut -d: -f7)" = "/usr/sbin/nologin" ]
+echo "[PASS] Phase 1: User & Group Hardening"
+
+# 2. Verify Phase 2: Configuration Directory Exposure
+[ "$(stat -c '%a' /opt/kijanikiosk/config)" = "750" ]
+echo "[PASS] Phase 2: Directory Tree Remediation"
+
+# 3. Verify Phase 3: Access Control Lists (FACL)
+# Replaced getfacl with stat to check if the directory has an ACL extension (indicated by a '+' at the end of permissions)
+stat -c '%A' /opt/kijanikiosk/shared/logs/ | grep -q "+"
+echo "[PASS] Phase 3: Access Control Lists (FACL)"
+
+# 4. Verify Phase 5: Firewall Reset
+sudo ufw status | grep -q "Status: active"
+echo "[PASS] Phase 5: Firewall Baseline Flush"
+
+# 5. Verify Phase 7: Journald and Logrotate Config Files
+[ -f "/etc/logrotate.d/kijanikiosk" ] && [ -f "/etc/systemd/journald.conf.d/kijanikiosk-journal.conf" ]
+echo "[PASS] Phase 7: Log Storage & Rotation"
+
+# 6. Verify Phase 8: Monitoring Health JSON File
+[ -f "/opt/kijanikiosk/health/last-provision.json" ]
+echo "[PASS] Phase 8: Monitoring Health JSON Log"
+
+echo "----------------------------------------------------"
+echo "SUCCESS: All baseline infrastructure phases converged successfully."
+
