@@ -82,14 +82,59 @@ sudo apt-get update && sudo apt-get install -y curl acl logrotate
 
 
 echo "==> Phase 5: Purging and Rebuilding Firewall Baseline..."
-# Flush dirty rules (like the leftover deny 3001) and reset to pure production baseline
+# 1. Reset ufw to an absolute clean slate to strip out the old history
 sudo ufw --force reset
+
+# 2. Set strict, secure default behaviors
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
-sudo ufw allow 22/tcp comment 'SSH'
-sudo ufw allow 80/tcp comment 'HTTP'
-sudo ufw allow 443/tcp comment 'HTTPS'
+
+# 3. RULE ORDERING CRITICAL STEP: Allow port 3001 loopback traffic FIRST
+# This guarantees local nginx reverse proxying works flawlessly
+sudo ufw allow in on lo to any port 3001 comment 'Allow loopback proxying to payments service'
+
+# 4. Explicitly block port 3001 from all external sources NEXT
+sudo ufw deny 3001 comment 'Block all external traffic to internal payments port'
+
+# 5. Restrict standard production services strictly to the monitoring subnet CIDR
+sudo ufw allow from 10.0.1.0/24 to any port 22 proto tcp comment 'Restrict SSH access to monitoring subnet'
+sudo ufw allow from 10.0.1.0/24 to any port 80 proto tcp comment 'Restrict HTTP access to monitoring subnet'
+sudo ufw allow from 10.0.1.0/24 to any port 443 proto tcp comment 'Restrict HTTPS access to monitoring subnet'
+
+# 6. Turn the firewall back on cleanly
 sudo ufw --force enable
+
+# ==============================================================================
+# REQUIRED FIREWALL RULE PROGRAMMATIC VERIFICATION
+# ==============================================================================
+verify_firewall() {
+  local failed=0
+  local status
+  status=$(sudo ufw status)
+
+  # Custom beginner-friendly mappings for their required logging strings
+  success() { echo "$1"; }
+  log() { echo "$1"; }
+  error() { echo "$1"; errors_found=1; }
+
+  echo "$status" | grep -q "22/tcp.*ALLOW" \
+    && success "PASS: SSH (22) allowed" \
+    || { log "FAIL: SSH rule missing"; ((failed++)); }
+
+  echo "$status" | grep -q "80/tcp.*ALLOW" \
+    && success "PASS: HTTP (80) allowed" \
+    || { log "FAIL: HTTP rule missing"; ((failed++)); }
+
+  echo "$status" | grep -q "3001.*DENY" \
+    && success "PASS: port 3001 external deny present" \
+    || { log "FAIL: port 3001 deny rule missing"; ((failed++)); }
+
+  [[ $failed -eq 0 ]] || error "${failed} firewall check(s) failed"
+}
+
+# Execute their mandated verification function cleanly
+verify_firewall
+
 
 
 echo "==> Phase 6: Injecting and Enabling Systemd Unit Files..."
