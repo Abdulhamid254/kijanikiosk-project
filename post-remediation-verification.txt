@@ -2,7 +2,7 @@
 total 12
 drwxrwx---+2 root   kijanikiosk 4096 Sep 28 11:15 .
 drwxr-xr-x 3 root   root        4096 Sep 28 06:54 ..
--rw-rw----+1 kk-api kijanikiosk    0 Sep 28 11:15 test-write.tmp
+-rw-rw----+1 kk-api kijanikiosk    0 Sep 28 21:38 test-write.tmp
 
 === FACL Inheritance Properties ===
 # file: opt/kijanikiosk/shared/logs/
