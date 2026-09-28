@@ -198,6 +198,7 @@ Group=kijanikiosk
 EnvironmentFile=/opt/kijanikiosk/config/payments-api.env
 ExecStart=/usr/bin/python3 -m http.server 3001
 
+
 # Advanced Security Rules
 ProtectSystem=strict
 ProtectHome=true
@@ -209,6 +210,21 @@ ProtectKernelTunables=true
 RestrictRealtime=true
 RestrictSUIDSGID=true
 MemoryDenyWriteExecute=true
+RestrictNamespaces=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+DeviceAllow=/dev/null r
+PrivateDevices=true
+LockPersonality=true
+
+# Advanced Whitelisting to reach the 2.4 threshold
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+IPAddressDeny=any
+IPAddressAllow=localhost
+SystemCallFilter=~@clock @cpu-emulation @debug @keyring @module @mount @obsolete @privileged @raw-io @reboot @resources @swap
+
+
+
 
 [Install]
 WantedBy=multi-user.target
