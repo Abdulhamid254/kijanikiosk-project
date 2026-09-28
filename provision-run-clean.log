@@ -14,8 +14,8 @@ curl was already not on hold.
 Hit:1 https://download.docker.com/linux/ubuntu resolute InRelease
 Hit:2 http://archive.ubuntu.com/ubuntu resolute InRelease
 Hit:3 http://security.ubuntu.com/ubuntu resolute-security InRelease
-Hit:4 http://archive.ubuntu.com/ubuntu resolute-updates InRelease
-Hit:5 https://packages.microsoft.com/repos/code stable InRelease
+Hit:4 https://packages.microsoft.com/repos/code stable InRelease
+Hit:5 http://archive.ubuntu.com/ubuntu resolute-updates InRelease
 Hit:6 http://archive.ubuntu.com/ubuntu resolute-backports InRelease
 Reading package lists...
 Reading package lists...
@@ -27,12 +27,12 @@ logrotate is already the newest version (3.22.0-1build1).
 Solving dependencies...
 0 upgraded, 0 newly installed, 0 to remove and 6 not upgraded.
 ==> Phase 5: Purging and Rebuilding Firewall Baseline...
-Backing up 'user.rules' to '/etc/ufw/user.rules.20260928_232708'
-Backing up 'before.rules' to '/etc/ufw/before.rules.20260928_232708'
-Backing up 'after.rules' to '/etc/ufw/after.rules.20260928_232708'
-Backing up 'user6.rules' to '/etc/ufw/user6.rules.20260928_232708'
-Backing up 'before6.rules' to '/etc/ufw/before6.rules.20260928_232708'
-Backing up 'after6.rules' to '/etc/ufw/after6.rules.20260928_232708'
+Backing up 'user.rules' to '/etc/ufw/user.rules.20260928_232721'
+Backing up 'before.rules' to '/etc/ufw/before.rules.20260928_232721'
+Backing up 'after.rules' to '/etc/ufw/after.rules.20260928_232721'
+Backing up 'user6.rules' to '/etc/ufw/user6.rules.20260928_232721'
+Backing up 'before6.rules' to '/etc/ufw/before6.rules.20260928_232721'
+Backing up 'after6.rules' to '/etc/ufw/after6.rules.20260928_232721'
 
 Default incoming policy changed to 'deny'
 (be sure to update your rules accordingly)
