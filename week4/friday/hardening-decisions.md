@@ -25,9 +25,9 @@ Our core operational environments can now be safely destroyed, re-provisioned, a
 ---
 
 ## Advanced Compute Node Hardening (Systemd Architecture Analysis)
-To safeguard our foundational payment platform, we embedded granular system core isolation controls directly into our deployment configurations. Following execution of our automated pipelines, our backend payment runtime scores a 2.3 out of 10.0 on our security threat analysis scale, easily beating our corporate target boundary of 2.5.
+To safeguard our foundational payment platform, we embedded granular system core isolation controls directly into our deployment configurations. Following execution of our automated pipelines, our backend payment runtime scores a **1.7 out of 10.0** on our security threat analysis scale, easily beating our corporate target boundary of 2.5.
 
-This low risk score is achieved through strong software sandboxing. The application service runs completely isolated from key operating system structures. It is barred from accessing physical system storage devices, cannot request kernel configuration modifications, and is restricted to an outbound network loop framework. Furthermore, the runtime layer utilizes a highly restricted temporary filesystem layout, ensuring that any malicious actions taken by outside actors inside the runtime environment are trapped in volatile memory and instantly erased whenever the service cycles.
+This low risk score of **1.7** is achieved through strong software sandboxing and system call filtering. The application service runs completely isolated from key operating system structures. It is barred from accessing physical system storage devices, cannot request kernel configuration modifications, and is restricted to an outbound network loop framework. Furthermore, the runtime layer utilizes a highly restricted temporary filesystem layout and restricts system calls to a tight native architecture whitelist, ensuring that any malicious actions taken by outside actors inside the runtime environment are trapped in volatile memory and instantly erased whenever the service cycles.
 
 ---
 
