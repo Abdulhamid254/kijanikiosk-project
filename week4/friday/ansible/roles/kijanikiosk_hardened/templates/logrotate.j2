@@ -1,4 +1,4 @@
-/opt/kijanikiosk/{{ server_role }}/*.log {
+/opt/kijanikiosk/{{ node_role_identifier }}/*.log {
     {{ logrotate_frequency }}
     rotate {{ logrotate_retention_count }}
     missingok
@@ -7,6 +7,6 @@
     delaycompress
     sharedscripts
     postrotate
-        /usr/bin/systemctl reload kijanikiosk-{{ server_role }}.service > /dev/null 2>&1 || true
+        /usr/bin/systemctl reload kijanikiosk-{{ node_role_identifier }}.service > /dev/null 2>&1 || true
     endscript
 }

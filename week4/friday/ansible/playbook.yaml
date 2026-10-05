@@ -2,7 +2,7 @@
 - hosts: all
   become: true
   
-  # Global playbook variables that feed our hardening rules
+  # Global playbook variables feeding our infrastructure requirements
   vars:
     system_required_packages: [ufw, logrotate, systemd-journal-remote]
     journal_retention_days: 14
@@ -14,11 +14,4 @@
 
   # Points directly to the roles/kijanikiosk_hardened folder we built
   roles:
-    - { role: kijanikiosk_hardened, server_role: "{{ server_role | default('app') }}" }
-
-  # Global event notification handlers
-  handlers:
-    - name: Restart KijaniKiosk Target Service
-      ansible.builtin.service:
-        name: "kijanikiosk-{{ server_role }}"
-        state: restarted
+    - { role: kijanikiosk_hardened, node_role_identifier: "{{ server_role | default('app') }}" }

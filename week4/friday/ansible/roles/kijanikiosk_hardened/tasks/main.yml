@@ -10,7 +10,7 @@
 # PHASE 2: Application Isolation Service Accounts
 - name: Phase 2 - Provision non-privileged system execution user accounts
   ansible.builtin.user:
-    name: "kk-{{ server_role }}-runner"
+    name: "kk-{{ node_role_identifier }}-runner"
     shell: /usr/sbin/nologin
     system: true
     create_home: false
@@ -19,17 +19,17 @@
 # PHASE 3: Directory Structure Customizations
 - name: Phase 3 - Construct hardened destination workspace runtime root directories
   ansible.builtin.file:
-    path: "/opt/kijanikiosk/{{ server_role }}"
+    path: "/opt/kijanikiosk/{{ node_role_identifier }}"
     state: directory
-    owner: "kk-{{ server_role }}-runner"
-    group: "kk-{{ server_role }}-runner"
+    owner: "kk-{{ node_role_identifier }}-runner"
+    group: "kk-{{ node_role_identifier }}-runner"
     mode: '0750'
 
 # PHASE 4: Hardened Systemd Application Unit Management
 - name: Phase 4 - Provision secure application manager unit layout parameters
   ansible.builtin.template:
     src: templates/kijanikiosk-service.j2
-    dest: "/etc/systemd/system/kijanikiosk-{{ server_role }}.service"
+    dest: "/etc/systemd/system/kijanikiosk-{{ node_role_identifier }}.service"
     owner: root
     group: root
     mode: '0644'
@@ -42,7 +42,7 @@
 
 - name: Phase 4 (Boot) - Verify core runtime state profiles are active and enabled
   ansible.builtin.service:
-    name: "kijanikiosk-{{ server_role }}"
+    name: "kijanikiosk-{{ node_role_identifier }}"
     state: started
     enabled: true
 
@@ -82,7 +82,7 @@
 - name: Phase 7 - Setup robust system space log rotation schedules
   ansible.builtin.template:
     src: templates/logrotate.j2
-    dest: "/etc/logrotate.d/kijanikiosk-{{ server_role }}"
+    dest: "/etc/logrotate.d/kijanikiosk-{{ node_role_identifier }}"
     owner: root
     group: root
     mode: '0644'

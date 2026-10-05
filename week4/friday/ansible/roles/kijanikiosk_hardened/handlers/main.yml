@@ -1,11 +1,12 @@
 ---
+# Dedicated Role Handlers with complete access to node variables
 - name: Reload Systemd Daemon Configurations
   ansible.builtin.systemd:
     daemon_reload: true
 
 - name: Restart KijaniKiosk Target Service
   ansible.builtin.service:
-    name: "kijanikiosk-{{ server_role }}"
+    name: "kijanikiosk-{{ node_role_identifier | default('app') }}"
     state: restarted
 
 - name: Restart Systemd Journal Service
@@ -16,3 +17,4 @@
 - name: Enforce Active Firewall Policies
   community.general.ufw:
     state: reloaded
+
