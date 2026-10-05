@@ -1,0 +1,16 @@
+---
+# Shared Baseline Core System Configurations
+system_required_packages:
+  - ufw
+  - logrotate
+  - systemd-journal-remote
+
+# Operational Security Firewall Configurations
+firewall_default_rules:
+  - { port: 22, protocol: "tcp", rule: "allow", comment: "Admin SSH Access Gateway" }
+  - { port: 80, protocol: "tcp", rule: "allow", comment: "Public HTTP Web Traversal" }
+
+# System Log and Journal Parameters
+journal_retention_days: 14
+logrotate_retention_count: 7
+logrotate_frequency: "daily"

@@ -1,0 +1,39 @@
+[Unit]
+Description=KijaniKiosk Application Node Runner for {{ node_role_identifier }}
+After=network.target
+
+[Service]
+Type=simple
+User=kk-{{ node_role_identifier }}-runner
+WorkingDirectory=/opt/kijanikiosk/{{ node_role_identifier }}
+ExecStart=/usr/bin/python3 -m http.server 8080
+Restart=always
+
+# ==============================================================================
+# Requirement 5: Advanced Systemd Sandboxing (Score 1.7 Baseline)
+# ==============================================================================
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+MemoryDenyWriteExecute=true
+RestrictNamespaces=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+DeviceAllow=/dev/null r
+PrivateDevices=true
+LockPersonality=true
+
+# Advanced Whitelisting parameters
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+IPAddressDeny=any
+IPAddressAllow=localhost
+SystemCallFilter=~@clock @cpu-emulation @debug @keyring @module @mount @obsolete @privileged @raw-io @reboot @resources @swap
+
+[Install]
+WantedBy=multi-user.target
