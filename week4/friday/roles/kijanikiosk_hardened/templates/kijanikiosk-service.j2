@@ -1,0 +1,29 @@
+[Unit]
+Description=KijaniKiosk Application Node Runner for {{ server_role }}
+After=network.target
+
+[Service]
+Type=simple
+User=kk-{{ server_role }}-runner
+WorkingDirectory=/opt/kijanikiosk/{{ server_role }}
+ExecStart=/usr/bin/python3 -m http.server 8080
+Restart=always
+
+# ==============================================================================
+# Requirement 5: Systemd Security Directives (Target Target Rating Score < 2.5)
+# ==============================================================================
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+CapabilityBoundingSet=~CAP_SYS_ADMIN
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+DeviceAllow=/dev/null r
+PrivateDevices=true
+MemoryDenyWriteExecute=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+
+[Install]
+WantedBy=multi-user.target

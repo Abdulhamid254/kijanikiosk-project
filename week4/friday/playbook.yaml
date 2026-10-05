@@ -1,0 +1,24 @@
+---
+- hosts: all
+  become: true
+  
+  # Global playbook variables that feed our hardening rules
+  vars:
+    system_required_packages: [ufw, logrotate, systemd-journal-remote]
+    journal_retention_days: 14
+    logrotate_retention_count: 7
+    logrotate_frequency: "daily"
+    firewall_default_rules:
+      - { port: 22, protocol: "tcp", rule: "allow", comment: "Admin SSH Access" }
+      - { port: 80, protocol: "tcp", rule: "allow", comment: "Web Inbound" }
+
+  # Points directly to the roles/kijanikiosk_hardened folder we built
+  roles:
+    - { role: kijanikiosk_hardened, server_role: "{{ server_role | default('app') }}" }
+
+  # Global event notification handlers
+  handlers:
+    - name: Restart KijaniKiosk Target Service
+      ansible.builtin.service:
+        name: "kijanikiosk-{{ server_role }}"
+        state: restarted

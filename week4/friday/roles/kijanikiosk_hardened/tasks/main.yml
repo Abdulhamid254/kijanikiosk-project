@@ -1,0 +1,88 @@
+---
+# PHASE 1: Baseline Security Package Deployments
+- name: Phase 1 - Synchronize required operating system utilities
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop: "{{ system_required_packages }}"
+
+# PHASE 2: Application Isolation Service Accounts
+- name: Phase 2 - Provision non-privileged system execution user accounts
+  ansible.builtin.user:
+    name: "kk-{{ server_role }}-runner"
+    shell: /usr/sbin/nologin
+    system: true
+    create_home: false
+    state: present
+
+# PHASE 3: Directory Structure Customizations
+- name: Phase 3 - Construct hardened destination workspace runtime root directories
+  ansible.builtin.file:
+    path: "/opt/kijanikiosk/{{ server_role }}"
+    state: directory
+    owner: "kk-{{ server_role }}-runner"
+    group: "kk-{{ server_role }}-runner"
+    mode: '0750'
+
+# PHASE 4: Hardened Systemd Application Unit Management
+- name: Phase 4 - Provision secure application manager unit layout parameters
+  ansible.builtin.template:
+    src: templates/kijanikiosk-service.j2
+    dest: "/etc/systemd/system/kijanikiosk-{{ server_role }}.service"
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Reload Systemd Daemon Configurations
+    - Restart KijaniKiosk Target Service
+
+- name: Phase 4 (Flush) - Force daemon flush to trigger handlers instantly
+  ansible.builtin.meta: flush_handlers
+
+- name: Phase 4 (Boot) - Verify core runtime state profiles are active and enabled
+  ansible.builtin.service:
+    name: "kijanikiosk-{{ server_role }}"
+    state: started
+    enabled: true
+
+# PHASE 5: Custom Firewall Infrastructure Segregation
+- name: Phase 5 - Configure shared baseline firewall packet traversal policies
+  community.general.ufw:
+    rule: "{{ item.rule }}"
+    port: "{{ item.port | string }}"
+    proto: "{{ item.protocol }}"
+    comment: "{{ item.comment }}"
+  loop: "{{ firewall_default_rules }}"
+  notify: Enforce Active Firewall Policies
+
+- name: Phase 5 (Enable) - Ensure firewall engine is actively shielding compute nodes
+  community.general.ufw:
+    state: enabled
+    policy: deny
+
+# PHASE 6: Journal Auditing Context Persistence
+- name: Phase 6 - Establish local trace system preservation folder assets
+  ansible.builtin.file:
+    path: /var/log/journal
+    state: directory
+    owner: root
+    group: systemd-journal
+    mode: '2755'
+
+- name: Phase 6 - Configure maximum log trace holding parameters
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/journald.conf
+    regexp: '^#?MaxRetentionSec='
+    line: "MaxRetentionSec={{ journal_retention_days }}d"
+    state: present
+  notify: Restart Systemd Journal Service
+
+# PHASE 7: Structured Log Rotation Automation
+- name: Phase 7 - Setup robust system space log rotation schedules
+  ansible.builtin.template:
+    src: templates/logrotate.j2
+    dest: "/etc/logrotate.d/kijanikiosk-{{ server_role }}"
+    owner: root
+    group: root
+    mode: '0644'
