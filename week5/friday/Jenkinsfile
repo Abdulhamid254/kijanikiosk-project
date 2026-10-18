@@ -33,7 +33,6 @@ pipeline {
         stage('Lint') {
             steps {
                 echo "Executing static code analysis..."
-                sh 'npm ci'
                 sh 'npm run lint'
             }
         }
@@ -58,7 +57,7 @@ pipeline {
                 stage('Security Audit') {
                     steps {
                         echo "Scanning dependencies for known vulnerabilities..."
-                        sh 'npm audit --audit-level=high'
+                        sh 'npm run metadata:audit'
                     }
                 }
             }
@@ -77,7 +76,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
                     sh """
                         echo "registry=${env.NEXUS_REGISTRY_URL}" > .npmrc
-                        echo "//nexus.internal:8081/repository/npm-private/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASSWORD}' | base64)" >> .npmrc
+                        echo "//localhost:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n '\${NEXUS_USER}:\${NEXUS_PASSWORD}' | base64)" >> .npmrc
                         npm publish
                         rm -f .npmrc
                     """
@@ -105,3 +104,5 @@ pipeline {
         }
     }
 }
+
+      
