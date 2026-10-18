@@ -29,20 +29,23 @@ pipeline {
                 echo "Starting build execution for ${APP_NAME} version ${BUILD_VERSION}"
             }
         }
-        
-        stage('Lint') {
+         stage('Lint') {
             steps {
                 echo "Executing static code analysis..."
-                sh 'npm run lint'
+                // Shift context into the subfolder containing your package configuration
+                dir('week5/friday') {
+                    sh 'npm run lint'
+                }
             }
         }
         
         stage('Build') {
             steps {
                 echo "Compiling application source..."
-                sh 'npm run build'
-                // Inject the deterministic version string into package.json for publishing
-                sh "npm version ${BUILD_VERSION} --no-git-tag-version"
+                dir('week5/friday') {
+                    sh 'npm run build'
+                    sh "npm version ${BUILD_VERSION} --no-git-tag-version"
+                }
             }
         }
         
@@ -51,13 +54,17 @@ pipeline {
                 stage('Unit & Integration Tests') {
                     steps {
                         echo "Running automated test suites..."
-                        sh 'npm run test:ci'
+                        dir('week5/friday') {
+                            sh 'npm run test:ci'
+                        }
                     }
                 }
                 stage('Security Audit') {
                     steps {
                         echo "Scanning dependencies for known vulnerabilities..."
-                        sh 'npm run metadata:audit'
+                        dir('week5/friday') {
+                            sh 'npm run metadata:audit'
+                        }
                     }
                 }
             }
@@ -66,30 +73,35 @@ pipeline {
         stage('Archive') {
             steps {
                 echo "Fingerprinting and archiving build artifacts locally..."
-                archiveArtifacts artifacts: 'dist/**/*.js, package.json', fingerprint: true, allowEmptyArchive: false
+                // Point target collection explicitly to the subfolder path
+                archiveArtifacts artifacts: 'week5/friday/dist/**/*.js, week5/friday/package.json', fingerprint: true, allowEmptyArchive: false
             }
         }
         
         stage('Publish to Nexus') {
             steps {
-                // strict credential isolation: token file exists only within this block
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
-                    sh """
-                        echo "registry=${env.NEXUS_REGISTRY_URL}" > .npmrc
-                        echo "//localhost:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n '\${NEXUS_USER}:\${NEXUS_PASSWORD}' | base64)" >> .npmrc
-                        npm publish
-                        rm -f .npmrc
-                    """
+                    dir('week5/friday') {
+                        sh """
+                            echo "registry=${env.NEXUS_REGISTRY_URL}" > .npmrc
+                            echo "//localhost:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n '\${NEXUS_USER}:\${NEXUS_PASSWORD}' | base64)" >> .npmrc
+                            npm publish
+                            rm -f .npmrc
+                        """
+                    }
                 }
             }
         }
-    }
     
     post {
-        always {
-            echo "Executing post-build workspace cleanup and test aggregation..."
-            junit allowEmptyResults: true, testResults: 'coverage/junit.xml'
-            cleanWs deleteDirs: true, notFailBuild: true
+         always {
+            script {
+                if (env.WORKSPACE) {
+                    echo "Executing post-build workspace cleanup and test aggregation..."
+                    junit allowEmptyResults: true, testResults: 'week5/friday/coverage/junit.xml'
+                    cleanWs deleteDirs: true, notFailBuild: true
+                }
+            }
         }
         success {
             echo "PIPELINE SUCCESSFUL: Artifact ${BUILD_VERSION} published to Nexus."
