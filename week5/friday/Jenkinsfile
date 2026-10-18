@@ -8,9 +8,9 @@ pipeline {
     
     environment {
         // Explicitly defined environment variables to prevent configuration drift
-        NEXUS_REGISTRY_URL = 'http://nexus.internal'
-        NEXUS_CREDENTIALS_ID = 'nexus-deployer-credentials'
-        APP_NAME = 'fintech-core-service'
+        NEXUS_REGISTRY_URL = "http://localhost:8081/repository/kijanikiosk-payments/"
+        NEXUS_CREDENTIALS_ID = "fb547463-70ca-4e90-8b78-9e89e1bf82fa"
+        APP_NAME = "kijanikiosk-payments"
         GIT_COMMIT_SHA = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'unknown'}"
         SEMVER_VERSION = "1.0.0"
         BUILD_VERSION = "${SEMVER_VERSION}-${GIT_COMMIT_SHA}"
