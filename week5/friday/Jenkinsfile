@@ -82,16 +82,16 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
                     dir('week5/friday') {
                         sh """
-                            # Step 1: Configure the repository URL explicitly with quotes
-                            npm config set registry "${env.NEXUS_REGISTRY_URL}"
+                            # Force npm registry targeting to your actual local host server machine
+                            npm config set registry "http://docker.internal"
                             
-                            # Step 2: Dynamically write the exact matching authentication token line
-                            echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc
+                            # Inject credentials using double quotes to ensure variables evaluate correctly
+                            echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n "\${NEXUS_USER}:\${NEXUS_PASSWORD}" | base64)" >> .npmrc
                             
-                            # Step 3: Publish the package to the configured repository
+                            # Execute package publishing
                             npm publish
                             
-                            # Step 4: Cleanup security footprint
+                            # Clean up file space
                             rm -f .npmrc
                         """
                     }
