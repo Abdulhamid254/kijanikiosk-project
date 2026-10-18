@@ -1,10 +1,10 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:20.11.0-alpine'
-            reuseNode true
-        }
+    agent any // Runs natively on the host machine since the host OS lacks Docker
+    
+    tools {
+        nodejs 'node20' // Dynamically fetches and configures Node.js/npm for the PATH environment
     }
+    
     
     environment {
         // Explicitly defined environment variables to prevent configuration drift
@@ -20,7 +20,7 @@ pipeline {
         timeout(time: 10, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '10'))
         disableConcurrentBuilds()
-        ansiColor('xterm')
+        //ansiColor('xterm')
     }
     
     stages {
