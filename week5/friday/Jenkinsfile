@@ -80,11 +80,11 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
                     dir('week5/friday') {
-                        // Sequential standalone execution strings using strict single quotes
+                        // Use standalone single-quoted execution arrays to preserve the complete URL path
                         sh 'npm config set registry "http://docker.internal"'
                         sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc'
                         sh 'npm publish'
-                        sh 'rm -f .npmrc'
+                        sh 'rm -f .npmrc' 
                     }
                 }
             }
