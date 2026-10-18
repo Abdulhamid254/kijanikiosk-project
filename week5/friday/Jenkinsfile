@@ -76,14 +76,13 @@ pipeline {
                 archiveArtifacts artifacts: 'week5/friday/dist/**/*.js, week5/friday/package.json', fingerprint: true, allowEmptyArchive: false
             }
         }
-        
-                 stage('Publish to Nexus') {
+        stage('Publish to Nexus') {
             steps {
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
                     dir('week5/friday') {
-                        // Use strict single quotes so the shell variables pass without truncation
+                        // Sequential standalone execution strings using strict single quotes
                         sh 'npm config set registry "http://docker.internal"'
-                        sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=$(echo -n ${NEXUS_USER}:${NEXUS_PASSWORD} | base64)" >> .npmrc'
+                        sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc'
                         sh 'npm publish'
                         sh 'rm -f .npmrc'
                     }
