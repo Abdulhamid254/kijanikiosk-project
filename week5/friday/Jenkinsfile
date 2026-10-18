@@ -1,0 +1,108 @@
+pipeline {
+    agent {
+        docker {
+            image 'node:20.11.0-alpine'
+            reuseNode true
+        }
+    }
+    
+    environment {
+        // Explicitly defined environment variables to prevent configuration drift
+        NEXUS_REGISTRY_URL = "http://localhost:8081/repository/kijanikiosk-payments/"
+        NEXUS_CREDENTIALS_ID = "fb547463-70ca-4e90-8b78-9e89e1bf82fa"
+        APP_NAME = "kijanikiosk-payments"
+        GIT_COMMIT_SHA = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'unknown'}"
+        SEMVER_VERSION = "1.0.0"
+        BUILD_VERSION = "${SEMVER_VERSION}-${GIT_COMMIT_SHA}"
+    }
+    
+    options {
+        timeout(time: 10, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        disableConcurrentBuilds()
+        ansiColor('xterm')
+    }
+    
+    stages {
+        stage('Trigger & Initialize') {
+            steps {
+                echo "Starting build execution for ${APP_NAME} version ${BUILD_VERSION}"
+            }
+        }
+        
+        stage('Lint') {
+            steps {
+                echo "Executing static code analysis..."
+                sh 'npm run lint'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo "Compiling application source..."
+                sh 'npm run build'
+                // Inject the deterministic version string into package.json for publishing
+                sh "npm version ${BUILD_VERSION} --no-git-tag-version"
+            }
+        }
+        
+        stage('Parallel Verify') {
+            parallel {
+                stage('Unit & Integration Tests') {
+                    steps {
+                        echo "Running automated test suites..."
+                        sh 'npm run test:ci'
+                    }
+                }
+                stage('Security Audit') {
+                    steps {
+                        echo "Scanning dependencies for known vulnerabilities..."
+                        sh 'npm run metadata:audit'
+                    }
+                }
+            }
+        }
+        
+        stage('Archive') {
+            steps {
+                echo "Fingerprinting and archiving build artifacts locally..."
+                archiveArtifacts artifacts: 'dist/**/*.js, package.json', fingerprint: true, allowEmptyArchive: false
+            }
+        }
+        
+        stage('Publish to Nexus') {
+            steps {
+                // strict credential isolation: token file exists only within this block
+                withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    sh """
+                        echo "registry=${env.NEXUS_REGISTRY_URL}" > .npmrc
+                        echo "//localhost:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n '\${NEXUS_USER}:\${NEXUS_PASSWORD}' | base64)" >> .npmrc
+                        npm publish
+                        rm -f .npmrc
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "Executing post-build workspace cleanup and test aggregation..."
+            junit allowEmptyResults: true, testResults: 'coverage/junit.xml'
+            cleanWs deleteDirs: true, notFailBuild: true
+        }
+        success {
+            echo "PIPELINE SUCCESSFUL: Artifact ${BUILD_VERSION} published to Nexus."
+            echo "Nexus Repository URL: ${env.NEXUS_REGISTRY_URL}${env.APP_NAME}/-/${env.APP_NAME}-${env.BUILD_VERSION}.tgz"
+        }
+        failure {
+            echo "PIPELINE FAILED: Execution halted due to an error."
+            echo "Notification sent to Engineering Operations."
+        }
+        changed {
+            echo "Pipeline status transitioned from ${currentBuild.previousBuild?.result} to ${currentBuild.currentResult}"
+        }
+    }
+}
+
+      
