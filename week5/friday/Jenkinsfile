@@ -7,8 +7,8 @@ pipeline {
     
     
     environment {
-        // Explicitly defined environment variables to prevent configuration drift
-        NEXUS_REGISTRY_URL = "http://localhost:8081/repository/kijanikiosk-payments/"
+        // Use host.docker.internal so the Jenkins container can reach your host Nexus registry
+        NEXUS_REGISTRY_URL = "http://docker.internal"
         NEXUS_CREDENTIALS_ID = "fb547463-70ca-4e90-8b78-9e89e1bf82fa"
         APP_NAME = "kijanikiosk-payments"
         GIT_COMMIT_SHA = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'unknown'}"
@@ -77,13 +77,14 @@ pipeline {
             }
         }
         
-        stage('Publish to Nexus') {
+  stage('Publish to Nexus') {
             steps {
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
                     dir('week5/friday') {
                         sh """
                             echo "registry=${env.NEXUS_REGISTRY_URL}" > .npmrc
-                            echo "//localhost:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n '\${NEXUS_USER}:\${NEXUS_PASSWORD}' | base64)" >> .npmrc
+                            # Removed single quotes so the Linux container can evaluate the real username and password keys
+                            echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc
                             npm publish
                             rm -f .npmrc
                         """
