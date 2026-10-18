@@ -77,15 +77,21 @@ pipeline {
             }
         }
         
-  stage('Publish to Nexus') {
+         stage('Publish to Nexus') {
             steps {
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
                     dir('week5/friday') {
                         sh """
-                            echo "registry=${env.NEXUS_REGISTRY_URL}" > .npmrc
-                            # Removed single quotes so the Linux container can evaluate the real username and password keys
+                            # Step 1: Configure the repository URL explicitly with quotes
+                            npm config set registry "${env.NEXUS_REGISTRY_URL}"
+                            
+                            # Step 2: Dynamically write the exact matching authentication token line
                             echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc
+                            
+                            # Step 3: Publish the package to the configured repository
                             npm publish
+                            
+                            # Step 4: Cleanup security footprint
                             rm -f .npmrc
                         """
                     }
