@@ -29,10 +29,10 @@ pipeline {
                 echo "Starting build execution for ${APP_NAME} version ${BUILD_VERSION}"
             }
         }
-         stage('Lint') {
+       stage('Lint') {
             steps {
                 echo "Executing static code analysis..."
-                // Shift context into the subfolder containing your package configuration
+                // Step inside the folder where the package.json file actually lives
                 dir('week5/friday') {
                     sh 'npm run lint'
                 }
@@ -48,7 +48,6 @@ pipeline {
                 }
             }
         }
-        
         stage('Parallel Verify') {
             parallel {
                 stage('Unit & Integration Tests') {
