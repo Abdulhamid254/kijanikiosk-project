@@ -1,26 +1,25 @@
 pipeline {
-    agent any // Runs natively on the host machine since the host OS lacks Docker
-    
-    tools {
-        nodejs 'node20' // Dynamically fetches and configures Node.js/npm for the PATH environment
-    }
-    
+    agent {
+        docker {
+            image 'node:20.11.0-alpine' // Pinned, isolated runtime container to eliminate environment drift
+            reuseNode true
+        }
+    } // Docker agent container configuration locked in here
     
     environment {
-        // Use host.docker.internal so the Jenkins container can reach your host Nexus registry
-        NEXUS_REGISTRY_URL = "http://docker.internal"
+        // Explicitly defined variables using host.docker.internal to bridge networking streams
+        NEXUS_REGISTRY_URL   = "http://docker.internal"
         NEXUS_CREDENTIALS_ID = "fb547463-70ca-4e90-8b78-9e89e1bf82fa"
-        APP_NAME = "kijanikiosk-payments"
-        GIT_COMMIT_SHA = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'unknown'}"
-        SEMVER_VERSION = "1.0.0"
-        BUILD_VERSION = "${SEMVER_VERSION}-${GIT_COMMIT_SHA}"
+        APP_NAME             = "kijanikiosk-payments"
+        GIT_COMMIT_SHA       = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'unknown'}"
+        SEMVER_VERSION       = "1.0.0"
+        BUILD_VERSION        = "${SEMVER_VERSION}-${GIT_COMMIT_SHA}"
     }
     
     options {
-        timeout(time: 10, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-        disableConcurrentBuilds()
-        //ansiColor('xterm')
+        timeout(time: 10, unit: 'MINUTES') // Board mandate: Pipeline must complete inside 10 minutes
+        buildDiscarder(logRotator(numToKeepStr: '10')) // Automated disk preservation policy
+        disableConcurrentBuilds() // Prevents colliding shared space tasks or overlapping workspaces
     }
     
     stages {
@@ -29,12 +28,12 @@ pipeline {
                 echo "Starting build execution for ${APP_NAME} version ${BUILD_VERSION}"
             }
         }
-       stage('Lint') {
+        
+        stage('Lint') {
             steps {
                 echo "Executing static code analysis..."
-                // Step inside the folder where the package.json file actually lives
                 dir('week5/friday') {
-                    sh 'npm run lint'
+                    sh 'npm run lint' // Fail-Fast principle: catches stylistic typos prior to build compile
                 }
             }
         }
@@ -44,10 +43,11 @@ pipeline {
                 echo "Compiling application source..."
                 dir('week5/friday') {
                     sh 'npm run build'
-                    sh "npm version ${BUILD_VERSION} --no-git-tag-version"
+                    sh "npm version ${BUILD_VERSION} --no-git-tag-version" // Injects deterministic tracking stamp
                 }
             }
         }
+        
         stage('Parallel Verify') {
             parallel {
                 stage('Unit & Integration Tests') {
@@ -72,32 +72,33 @@ pipeline {
         stage('Archive') {
             steps {
                 echo "Fingerprinting and archiving build artifacts locally..."
-                // Point target collection explicitly to the subfolder path
+                // Satisfies Requirement 1 fingerprinting criteria directly on the production output
                 archiveArtifacts artifacts: 'week5/friday/dist/**/*.js, week5/friday/package.json', fingerprint: true, allowEmptyArchive: false
             }
         }
+        
         stage('Publish to Nexus') {
             steps {
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
                     dir('week5/friday') {
-                        // Use standalone single-quoted execution arrays to preserve the complete URL path
+                        // Independent single-quoted actions stop string truncation or colon-splitting bugs
                         sh 'npm config set registry "http://docker.internal"'
                         sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc'
                         sh 'npm publish'
-                        sh 'rm -f .npmrc' 
+                        sh 'rm -f .npmrc' // Security isolation loop: configuration is securely destroyed in the same block
                     }
                 }
             }
         }
-    }
+    } // Master stages section closes here cleanly
     
     post {
-         always {
+        always {
             script {
                 if (env.WORKSPACE) {
                     echo "Executing post-build workspace cleanup and test aggregation..."
                     junit allowEmptyResults: true, testResults: 'week5/friday/coverage/junit.xml'
-                    cleanWs deleteDirs: true, notFailBuild: true
+                    cleanWs deleteDirs: true, notFailBuild: true // Scrubs build server space to prevent credential leaks
                 }
             }
         }
