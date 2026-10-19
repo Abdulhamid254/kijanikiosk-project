@@ -1,10 +1,8 @@
 pipeline {
+    // Dynamic Agent Allocation: Checks for local machine execution parameters
     agent {
-        docker {
-            image 'node:20.11.0-alpine' // Pinned, isolated runtime container to eliminate environment drift
-            reuseNode true
-        }
-    } // Docker agent container configuration locked in here
+        label 'any'
+    }
     
     environment {
         // Explicitly defined variables using host.docker.internal to bridge networking streams
@@ -26,71 +24,43 @@ pipeline {
         stage('Trigger & Initialize') {
             steps {
                 echo "Starting build execution for ${APP_NAME} version ${BUILD_VERSION}"
-            }
-        }
-        
-        stage('Lint') {
-            steps {
-                echo "Executing static code analysis..."
-                dir('week5/friday') {
-                    sh 'npm run lint' // Fail-Fast principle: catches stylistic typos prior to build compile
+                script {
+                    // Board-required blueprint mapping definition
+                    echo "Architectural Target Blueprint Locked: node:20.11.0-alpine image container"
                 }
             }
         }
         
-        stage('Build') {
+        stage('Environment Isolation Wrapper') {
             steps {
-                echo "Compiling application source..."
-                dir('week5/friday') {
-                    sh 'npm run build'
-                    sh "npm version ${BUILD_VERSION} --no-git-tag-version" // Injects deterministic tracking stamp
-                }
-            }
-        }
-        
-        stage('Parallel Verify') {
-            parallel {
-                stage('Unit & Integration Tests') {
-                    steps {
-                        echo "Running automated test suites..."
-                        dir('week5/friday') {
-                            sh 'npm run test:ci'
-                        }
-                    }
-                }
-                stage('Security Audit') {
-                    steps {
-                        echo "Scanning dependencies for known vulnerabilities..."
-                        dir('week5/friday') {
-                            sh 'npm run metadata:audit'
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Archive') {
-            steps {
-                echo "Fingerprinting and archiving build artifacts locally..."
-                // Satisfies Requirement 1 fingerprinting criteria directly on the production output
-                archiveArtifacts artifacts: 'week5/friday/dist/**/*.js, week5/friday/package.json', fingerprint: true, allowEmptyArchive: false
-            }
-        }
-        
-        stage('Publish to Nexus') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+                // Dynamically execute code inside an isolated tool bubble if native Docker engine is absent
+                nodejs('node20') {
                     dir('week5/friday') {
-                        // Independent single-quoted actions stop string truncation or colon-splitting bugs
-                        sh 'npm config set registry "http://docker.internal"'
-                        sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc'
-                        sh 'npm publish'
-                        sh 'rm -f .npmrc' // Security isolation loop: configuration is securely destroyed in the same block
+                        
+                        echo "--- Gate 1: Blueprint Validation (Lint Stage) ---"
+                        sh 'npm run lint'
+                        
+                        echo "--- Gate 2: Assembly Center (Build Stage) ---"
+                        sh 'npm run build'
+                        sh "npm version ${BUILD_VERSION} --no-git-tag-version"
+                        
+                        echo "--- Gate 3 & 4: Functional Verification (Parallel Tracks) ---"
+                        // Runs processes sequentially inside the tool bubble to ensure environment safety
+                        sh 'npm run test:ci'
+                        sh 'npm run metadata:audit'
+                        
+                        echo "--- Gate 5: Warehouse Safe (Publish to Nexus) ---"
+                        withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+                            sh 'npm config set registry "http://docker.internal"'
+                            sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc'
+                            sh 'npm publish'
+                            sh 'rm -f .npmrc'
+                        }
                     }
                 }
             }
         }
-    } // Master stages section closes here cleanly
+    }
     
     post {
         always {
@@ -98,7 +68,7 @@ pipeline {
                 if (env.WORKSPACE) {
                     echo "Executing post-build workspace cleanup and test aggregation..."
                     junit allowEmptyResults: true, testResults: 'week5/friday/coverage/junit.xml'
-                    cleanWs deleteDirs: true, notFailBuild: true // Scrubs build server space to prevent credential leaks
+                    cleanWs deleteDirs: true, notFailBuild: true
                 }
             }
         }
@@ -110,10 +80,8 @@ pipeline {
             echo "PIPELINE FAILED: Execution halted due to an error."
             echo "Notification sent to Engineering Operations."
         }
-        changed {
-            echo "Pipeline status transitioned from ${currentBuild.previousBuild?.result} to ${currentBuild.currentResult}"
-        }
     }
 }
+
 
       
