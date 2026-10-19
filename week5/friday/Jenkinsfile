@@ -1,8 +1,8 @@
 pipeline {
-    agent any // Runs natively on the available system worker node
+    agent any // Runs natively on the host machine since the host OS lacks Docker
     
-     environment {
-        // Explicitly defined variables using host.docker.internal to bridge networking streams
+    environment {
+        // Explicitly defined variables using host.docker.internal to bridge container networking streams
         NEXUS_REGISTRY_URL   = "http://docker.internal"
         NEXUS_CREDENTIALS_ID = "fb547463-70ca-4e90-8b78-9e89e1bf82fa"
         APP_NAME             = "kijanikiosk-payments"
@@ -33,7 +33,6 @@ pipeline {
                 // Dynamically execute code inside an isolated tool bubble if native Docker engine is absent
                 nodejs('node20') {
                     dir('week5/friday') {
-                        
                         echo "--- Gate 1: Blueprint Validation (Lint Stage) ---"
                         sh 'npm run lint'
                         
@@ -42,14 +41,21 @@ pipeline {
                         sh "npm version ${BUILD_VERSION} --no-git-tag-version"
                         
                         echo "--- Gate 3 & 4: Functional Verification (Parallel Tracks) ---"
-                        // Runs processes sequentially inside the tool bubble to ensure environment safety
                         sh 'npm run test:ci'
                         sh 'npm run metadata:audit'
-                        
-                        echo "--- Gate 5: Warehouse Safe (Publish to Nexus) ---"
-                        withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    }
+                }
+            }
+        }
+        
+        stage('Publish to Nexus') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    dir('week5/friday') {
+                        nodejs('node20') {
+                            // Unified registry path parameters using single quotes prevent any truncation errors
                             sh 'npm config set registry "http://docker.internal"'
-                            sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc'
+                            sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" > .npmrc'
                             sh 'npm publish'
                             sh 'rm -f .npmrc'
                         }
@@ -57,7 +63,7 @@ pipeline {
                 }
             }
         }
-    }
+    } // Closes the master stages wrapper cleanly
     
     post {
         always {
