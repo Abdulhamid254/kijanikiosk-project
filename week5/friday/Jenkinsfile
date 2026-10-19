@@ -53,9 +53,17 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
                     dir('week5/friday') {
                         nodejs('node20') {
-                            // Separating commands into standalone single-line steps prevents parsing/truncation errors
+                            // Step 1: Lock the registry target location
                             sh 'npm config set registry "http://nexus:8081/repository/kijanikiosk-payments/"'
-                            sh 'echo "//nexus:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" > .npmrc'
+                            
+                            // Step 2: Establish the base login server authentication token mapping (Notice the root domain scoping)
+                            sh 'echo "//nexus:8081/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" > .npmrc'
+                            
+                            // Step 3: Append the explicit path security clearance
+                            sh 'echo "//nexus:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc'
+                            sh 'echo "always-auth=true" >> .npmrc'
+                            
+                            // Step 4: Execute publish and destroy the local footprint
                             sh 'npm publish'
                             sh 'rm -f .npmrc'
                         }
