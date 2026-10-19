@@ -2,8 +2,8 @@ pipeline {
     agent any // Runs natively on the host machine since the host OS lacks Docker
     
     environment {
-        // Explicitly defined variables using host.docker.internal to bridge container networking streams
-        NEXUS_REGISTRY_URL   = "http://docker.internal"
+        // Updated hostname utilizing the direct internal container network bridge channel
+        NEXUS_REGISTRY_URL   = "http://nexus:8081/repository/kijanikiosk-payments/"
         NEXUS_CREDENTIALS_ID = "fb547463-70ca-4e90-8b78-9e89e1bf82fa"
         APP_NAME             = "kijanikiosk-payments"
         GIT_COMMIT_SHA       = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'unknown'}"
@@ -53,9 +53,9 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
                     dir('week5/friday') {
                         nodejs('node20') {
-                            // Unified registry path parameters using single quotes prevent any truncation errors
-                            sh 'npm config set registry "http://docker.internal"'
-                            sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" > .npmrc'
+                            // Separating commands into standalone single-line steps prevents parsing/truncation errors
+                            sh 'npm config set registry "http://nexus:8081/repository/kijanikiosk-payments/"'
+                            sh 'echo "//nexus:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" > .npmrc'
                             sh 'npm publish'
                             sh 'rm -f .npmrc'
                         }
