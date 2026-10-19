@@ -1,0 +1,184 @@
+Started by user Abdul medi
+
+Obtained week5/friday/Jenkinsfile from git https://github.com/Abdulhamid254/kijanikiosk-project
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins
+ in /var/jenkins_home/workspace/KijaniKiosk CI Pipeline
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: git
+No credentials specified
+Cloning the remote Git repository
+Cloning repository https://github.com/Abdulhamid254/kijanikiosk-project
+ > git init /var/jenkins_home/workspace/KijaniKiosk CI Pipeline # timeout=10
+Fetching upstream changes from https://github.com/Abdulhamid254/kijanikiosk-project
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/Abdulhamid254/kijanikiosk-project +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url https://github.com/Abdulhamid254/kijanikiosk-project # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+ > git rev-parse refs/remotes/origin/feature/week5-ci-pipeline^{commit} # timeout=10
+Checking out Revision cfa748723784a5b2703c235da852565c50e0d742 (refs/remotes/origin/feature/week5-ci-pipeline)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f cfa748723784a5b2703c235da852565c50e0d742 # timeout=10
+Commit message: "."
+ > git rev-list --no-walk bcb54478ea3595d9583856b4e72de8164980aacf # timeout=10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timeout
+Timeout set to expire in 10 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Trigger & Initialize)
+[Pipeline] echo
+Starting build execution for kijanikiosk-payments version 1.0.0-cfa7487
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+Architectural Target Blueprint Locked: node:20.11.0-alpine image container
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Environment Isolation Wrapper)
+[Pipeline] nodejs
+[Pipeline] {
+[Pipeline] dir
+Running in /var/jenkins_home/workspace/KijaniKiosk CI Pipeline/week5/friday
+[Pipeline] {
+[Pipeline] echo
+--- Gate 1: Blueprint Validation (Lint Stage) ---
+[Pipeline] sh
++ npm run lint
+
+> kijanikiosk-payments@1.0.0 lint
+> echo 'Executing code linting quality gates...' && exit 0
+
+Executing code linting quality gates...
+[Pipeline] echo
+--- Gate 2: Assembly Center (Build Stage) ---
+[Pipeline] sh
++ npm run build
+
+> kijanikiosk-payments@1.0.0 build
+> mkdir -p dist && echo 'const version="'${npm_package_version}'"; console.log("Payments Service Active:", version);' > dist/index.js
+
+[Pipeline] sh
++ npm version 1.0.0-cfa7487 --no-git-tag-version
+v1.0.0-cfa7487
+[Pipeline] echo
+--- Gate 3 & 4: Functional Verification (Parallel Tracks) ---
+[Pipeline] sh
++ npm run test:ci
+
+> kijanikiosk-payments@1.0.0-cfa7487 test:ci
+> mkdir -p coverage && echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="Payments Tests"><testcase name="Verify Calculation Logic" time="0.01"/></testsuite></testsuites>' > coverage/junit.xml
+
+[Pipeline] sh
++ npm run metadata:audit
+
+> kijanikiosk-payments@1.0.0-cfa7487 metadata:audit
+> echo 'Auditing dependencies...'
+
+Auditing dependencies...
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // nodejs
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Publish to Nexus)
+[Pipeline] withCredentials
+Masking supported pattern matches of $NEXUS_PASSWORD
+[Pipeline] {
+[Pipeline] dir
+Running in /var/jenkins_home/workspace/KijaniKiosk CI Pipeline/week5/friday
+[Pipeline] {
+[Pipeline] nodejs
+[Pipeline] {
+[Pipeline] sh
++ npm config set registry http://nexus:8081/repository/kijanikiosk-payments/
+[Pipeline] sh
++ echo -n admin:****
++ base64
++ echo //nexus:8081/:_auth=YWRtaW46****
+[Pipeline] sh
++ echo -n admin:****
++ base64
++ echo //nexus:8081/repository/kijanikiosk-payments/:_auth=YWRtaW46****
+[Pipeline] sh
++ echo always-auth=true
+[Pipeline] sh
++ npm publish
+npm notice
+npm notice 📦  kijanikiosk-payments@1.0.0-cfa7487
+npm notice Tarball Contents
+npm notice 4.5kB Jenkinsfile
+npm notice 3.9kB ci-pipeline-board-document.md
+npm notice 164B coverage/junit.xml
+npm notice 73B dist/index.js
+npm notice 2.9kB fault-injection-log.md
+npm notice 748B package.json
+npm notice Tarball Details
+npm notice name: kijanikiosk-payments
+npm notice version: 1.0.0-cfa7487
+npm notice filename: kijanikiosk-payments-1.0.0-cfa7487.tgz
+npm notice package size: 4.8 kB
+npm notice unpacked size: 12.3 kB
+npm notice shasum: 2bcbfe8309402f5bdf15e38661dc8108fad3dd02
+npm notice integrity: sha512-uu46KHAcqPQD/[...]k36sf1GMAi8Jg==
+npm notice total files: 6
+npm notice
+npm notice Publishing to http://nexus:8081/repository/kijanikiosk-payments/ with tag latest and default access
++ kijanikiosk-payments@1.0.0-cfa7487
+[Pipeline] sh
++ rm -f .npmrc
+[Pipeline] }
+[Pipeline] // nodejs
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+Executing post-build workspace cleanup and test aggregation...
+[Pipeline] junit
+Recording test results
+[Checks API] No suitable checks publisher found.
+[Pipeline] cleanWs
+[WS-CLEANUP] Deleting project workspace...
+[WS-CLEANUP] Deferred wipeout is used...
+[WS-CLEANUP] done
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] echo
+PIPELINE SUCCESSFUL: Artifact 1.0.0-cfa7487 published to Nexus.
+[Pipeline] echo
+Nexus Repository URL: http://nexus:8081/repository/kijanikiosk-payments/kijanikiosk-payments/-/kijanikiosk-payments-1.0.0-cfa7487.tgz
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS

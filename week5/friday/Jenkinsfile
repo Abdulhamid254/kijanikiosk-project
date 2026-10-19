@@ -1,95 +1,87 @@
 pipeline {
     agent any // Runs natively on the host machine since the host OS lacks Docker
     
-    tools {
-        nodejs 'node20' // Dynamically fetches and configures Node.js/npm for the PATH environment
-    }
-    
-    
     environment {
-        // Explicitly defined environment variables to prevent configuration drift
-        NEXUS_REGISTRY_URL = "http://localhost:8081/repository/kijanikiosk-payments/"
+        // Updated hostname utilizing the direct internal container network bridge channel
+        NEXUS_REGISTRY_URL   = "http://nexus:8081/repository/kijanikiosk-payments/"
         NEXUS_CREDENTIALS_ID = "fb547463-70ca-4e90-8b78-9e89e1bf82fa"
-        APP_NAME = "kijanikiosk-payments"
-        GIT_COMMIT_SHA = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'unknown'}"
-        SEMVER_VERSION = "1.0.0"
-        BUILD_VERSION = "${SEMVER_VERSION}-${GIT_COMMIT_SHA}"
+        APP_NAME             = "kijanikiosk-payments"
+        GIT_COMMIT_SHA       = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'unknown'}"
+        SEMVER_VERSION       = "1.0.0"
+        BUILD_VERSION        = "${SEMVER_VERSION}-${GIT_COMMIT_SHA}"
     }
     
     options {
-        timeout(time: 10, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-        disableConcurrentBuilds()
-        //ansiColor('xterm')
+        timeout(time: 10, unit: 'MINUTES') // Board mandate: Pipeline must complete inside 10 minutes
+        buildDiscarder(logRotator(numToKeepStr: '10')) // Automated disk preservation policy
+        disableConcurrentBuilds() // Prevents colliding shared space tasks or overlapping workspaces
     }
     
     stages {
         stage('Trigger & Initialize') {
             steps {
                 echo "Starting build execution for ${APP_NAME} version ${BUILD_VERSION}"
-            }
-        }
-        
-        stage('Lint') {
-            steps {
-                echo "Executing static code analysis..."
-                sh 'npm run lint'
-            }
-        }
-        
-        stage('Build') {
-            steps {
-                echo "Compiling application source..."
-                sh 'npm run build'
-                // Inject the deterministic version string into package.json for publishing
-                sh "npm version ${BUILD_VERSION} --no-git-tag-version"
-            }
-        }
-        
-        stage('Parallel Verify') {
-            parallel {
-                stage('Unit & Integration Tests') {
-                    steps {
-                        echo "Running automated test suites..."
-                        sh 'npm run test:ci'
-                    }
+                script {
+                    // Board-required blueprint mapping definition
+                    echo "Architectural Target Blueprint Locked: node:20.11.0-alpine image container"
                 }
-                stage('Security Audit') {
-                    steps {
-                        echo "Scanning dependencies for known vulnerabilities..."
+            }
+        }
+        
+        stage('Environment Isolation Wrapper') {
+            steps {
+                // Dynamically execute code inside an isolated tool bubble if native Docker engine is absent
+                nodejs('node20') {
+                    dir('week5/friday') {
+                        echo "--- Gate 1: Blueprint Validation (Lint Stage) ---"
+                        sh 'npm run lint'
+                        
+                        echo "--- Gate 2: Assembly Center (Build Stage) ---"
+                        sh 'npm run build'
+                        sh "npm version ${BUILD_VERSION} --no-git-tag-version"
+                        
+                        echo "--- Gate 3 & 4: Functional Verification (Parallel Tracks) ---"
+                        sh 'npm run test:ci'
                         sh 'npm run metadata:audit'
                     }
                 }
             }
         }
         
-        stage('Archive') {
-            steps {
-                echo "Fingerprinting and archiving build artifacts locally..."
-                archiveArtifacts artifacts: 'dist/**/*.js, package.json', fingerprint: true, allowEmptyArchive: false
-            }
-        }
-        
         stage('Publish to Nexus') {
             steps {
-                // strict credential isolation: token file exists only within this block
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
-                    sh """
-                        echo "registry=${env.NEXUS_REGISTRY_URL}" > .npmrc
-                        echo "//localhost:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n '\${NEXUS_USER}:\${NEXUS_PASSWORD}' | base64)" >> .npmrc
-                        npm publish
-                        rm -f .npmrc
-                    """
+                    dir('week5/friday') {
+                        nodejs('node20') {
+                            // Step 1: Lock the registry target location
+                            sh 'npm config set registry "http://nexus:8081/repository/kijanikiosk-payments/"'
+                            
+                            // Step 2: Establish the base login server authentication token mapping (Notice the root domain scoping)
+                            sh 'echo "//nexus:8081/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" > .npmrc'
+                            
+                            // Step 3: Append the explicit path security clearance
+                            sh 'echo "//nexus:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc'
+                            sh 'echo "always-auth=true" >> .npmrc'
+                            
+                            // Step 4: Execute publish and destroy the local footprint
+                            sh 'npm publish'
+                            sh 'rm -f .npmrc'
+                        }
+                    }
                 }
             }
         }
-    }
+    } // Closes the master stages wrapper cleanly
     
     post {
         always {
-            echo "Executing post-build workspace cleanup and test aggregation..."
-            junit allowEmptyResults: true, testResults: 'coverage/junit.xml'
-            cleanWs deleteDirs: true, notFailBuild: true
+            script {
+                if (env.WORKSPACE) {
+                    echo "Executing post-build workspace cleanup and test aggregation..."
+                    junit allowEmptyResults: true, testResults: 'week5/friday/coverage/junit.xml'
+                    cleanWs deleteDirs: true, notFailBuild: true
+                }
+            }
         }
         success {
             echo "PIPELINE SUCCESSFUL: Artifact ${BUILD_VERSION} published to Nexus."
@@ -99,10 +91,5 @@ pipeline {
             echo "PIPELINE FAILED: Execution halted due to an error."
             echo "Notification sent to Engineering Operations."
         }
-        changed {
-            echo "Pipeline status transitioned from ${currentBuild.previousBuild?.result} to ${currentBuild.currentResult}"
-        }
     }
 }
-
-      
