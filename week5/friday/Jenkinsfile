@@ -1,11 +1,8 @@
 pipeline {
-    // Dynamic Agent Allocation: Checks for local machine execution parameters
-    agent {
-        label 'any'
-    }
+    agent any // Runs natively on the available system worker node
     
     environment {
-        // Explicitly defined variables using host.docker.internal to bridge networking streams
+        // Explicitly defined variables using host.docker.internal to bridge container networking streams
         NEXUS_REGISTRY_URL   = "http://docker.internal"
         NEXUS_CREDENTIALS_ID = "fb547463-70ca-4e90-8b78-9e89e1bf82fa"
         APP_NAME             = "kijanikiosk-payments"
@@ -45,14 +42,14 @@ pipeline {
                         sh "npm version ${BUILD_VERSION} --no-git-tag-version"
                         
                         echo "--- Gate 3 & 4: Functional Verification (Parallel Tracks) ---"
-                        // Runs processes sequentially inside the tool bubble to ensure environment safety
                         sh 'npm run test:ci'
                         sh 'npm run metadata:audit'
                         
                         echo "--- Gate 5: Warehouse Safe (Publish to Nexus) ---"
                         withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+                            // Aligned configuration URLs using single quotes to stop path truncation bugs
                             sh 'npm config set registry "http://docker.internal"'
-                            sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\${NEXUS_PASSWORD} | base64)" >> .npmrc'
+                            sh 'echo "//host.docker.internal:8081/repository/kijanikiosk-payments/:_auth=\$(echo -n \${NEXUS_USER}:\\${NEXUS_PASSWORD} | base64)" >> .npmrc'
                             sh 'npm publish'
                             sh 'rm -f .npmrc'
                         }
@@ -82,6 +79,3 @@ pipeline {
         }
     }
 }
-
-
-      
