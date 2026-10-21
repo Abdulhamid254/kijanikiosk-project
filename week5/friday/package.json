@@ -1,7 +1,7 @@
 {
   "name": "kijanikiosk-payments",
   "version": "1.0.0",
-  "description": "Kijanikiosk payments gateway platform service",
+  "description": "Kijanikiosk payments gateway platform service - Release Build",
   "main": "dist/index.js",
   "scripts": {
     "lint": "echo 'Executing code linting quality gates...' && exit 0",
