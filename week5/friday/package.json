@@ -1,10 +1,10 @@
 {
   "name": "kijanikiosk-payments",
   "version": "1.0.0",
-  "description": "Kijanikiosk payments gateway platform service",
+  "description": "Kijanikiosk payments gateway platform service - Release Build",
   "main": "dist/index.js",
   "scripts": {
-    "lint": "echo 'Executing code linting quality gates......' && exit 0",
+    "lint": "echo 'Executing code linting quality gates...' && exit 0",
     "build": "mkdir -p dist && echo 'const version=\"'${npm_package_version}'\"; console.log(\"Payments Service Active:\", version);' > dist/index.js",
     "test:ci": "mkdir -p coverage && echo '<?xml version=\"1.0\" encoding=\"UTF-8\"?><testsuites><testsuite name=\"Payments Tests\"><testcase name=\"Verify Calculation Logic\" time=\"0.01\"/></testsuite></testsuites>' > coverage/junit.xml",
     "metadata:audit": "echo 'Auditing dependencies...'"
