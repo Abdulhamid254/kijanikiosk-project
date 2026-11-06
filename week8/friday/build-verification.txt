@@ -1,0 +1,74 @@
+=== OUTPUT OF DOCKER BUILD --NO-CACHE ===
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.production
+#1 transferring dockerfile: 1.48kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/alpine:3.18
+#2 DONE 1.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/6] FROM docker.io/library/alpine:3.18@sha256:de0eb0b3f2a47ba1eb89389859a9bd88b28e82f5826b6969ad604979713c2d4f
+#4 resolve docker.io/library/alpine:3.18@sha256:de0eb0b3f2a47ba1eb89389859a9bd88b28e82f5826b6969ad604979713c2d4f 0.0s done
+#4 CACHED
+
+#5 [2/6] RUN addgroup -S kijanigroup && adduser -S kijani -G kijanigroup
+#5 DONE 0.2s
+
+#6 [3/6] WORKDIR /home/kijani/app
+#6 DONE 0.1s
+
+#7 [4/6] RUN apk add --no-cache python3 &&     rm -rf /var/cache/apk/*
+#7 0.196 fetch https://dl-cdn.alpinelinux.org/alpine/v3.18/main/x86_64/APKINDEX.tar.gz
+#7 1.327 fetch https://dl-cdn.alpinelinux.org/alpine/v3.18/community/x86_64/APKINDEX.tar.gz
+#7 3.747 (1/17) Installing libexpat (2.7.0-r0)
+#7 3.896 (2/17) Installing libbz2 (1.0.8-r5)
+#7 3.987 (3/17) Installing libffi (3.4.4-r2)
+#7 4.061 (4/17) Installing gdbm (1.23-r1)
+#7 4.150 (5/17) Installing xz-libs (5.4.3-r1)
+#7 4.339 (6/17) Installing libgcc (12.2.1_git20220924-r10)
+#7 4.458 (7/17) Installing libstdc++ (12.2.1_git20220924-r10)
+#7 5.531 (8/17) Installing mpdecimal (2.5.1-r2)
+#7 7.530 (9/17) Installing ncurses-terminfo-base (6.4_p20230506-r0)
+#7 7.716 (10/17) Installing libncursesw (6.4_p20230506-r0)
+#7 8.082 (11/17) Installing libpanelw (6.4_p20230506-r0)
+#7 8.150 (12/17) Installing readline (8.2.1-r1)
+#7 8.401 (13/17) Installing sqlite-libs (3.41.2-r4)
+#7 9.210 (14/17) Installing python3 (3.11.12-r1)
+#7 22.61 (15/17) Installing python3-pycache-pyc0 (3.11.12-r1)
+#7 33.94 (16/17) Installing pyc (0.1-r0)
+#7 34.00 (17/17) Installing python3-pyc (3.11.12-r1)
+#7 34.07 Executing busybox-1.36.1-r7.trigger
+#7 34.08 OK: 51 MiB in 32 packages
+#7 DONE 34.2s
+
+#8 [5/6] RUN echo 'import http.server, sys; class H(http.server.BaseHTTPRequestHandler):     def do_GET(self):         if self.path == "/health": self.send_response(200); self.end_headers(); self.wfile.write(b"OK")         else: self.send_response(404); self.end_headers() http.server.HTTPServer(("0.0.0.0", 3001), H).serve_forever()' > server.py
+#8 DONE 0.2s
+
+#9 [6/6] RUN chown -R kijani:kijanigroup /home/kijani/app
+#9 DONE 0.2s
+
+#10 exporting to image
+#10 exporting layers
+#10 exporting layers 1.7s done
+#10 exporting manifest sha256:f3e486dc52aebccc7230d54a19d9bd9fccdd3cf254d0bf71ca4779700e98a42a 0.0s done
+#10 exporting config sha256:ff532ae6ab5a7efe118c107f9f7c8cdbcab3448d2e2c3ae1534eb22207cdaee1 0.0s done
+#10 exporting attestation manifest sha256:eefa0e174d5ecce032ba397fafce8d623f228192b815d89b7c91d091e80f038b 0.0s done
+#10 exporting manifest list sha256:7ac606aad0f6cfbec2a1bb6e6c338edd1a8f7d36ea2cf71048349ce64d6fb578 0.0s done
+#10 naming to kijani-registry.internal/kk-payments:local done
+#10 unpacking to kijani-registry.internal/kk-payments:local
+#10 unpacking to kijani-registry.internal/kk-payments:local 0.4s done
+#10 DONE 2.2s
+
+=== DOCKER IMAGES SIZE PROFILES ===
+IMAGE                                        ID             DISK USAGE   CONTENT SIZE   EXTRA
+kijani-registry.internal/kk-payments:local   7ac606aad0f6       73.3MB         19.8MB        
+
+=== WHOAMI VERIFICATION ===
+kijani
+
+=== TSC ABSENCE VERIFICATION ===

@@ -1,0 +1,38 @@
+# ==========================================
+# Production Runtime Stage (Ultra-lightweight)
+# ==========================================
+FROM alpine:3.18
+
+# 1. Create the non-root 'kijani' user and group
+RUN addgroup -S kijanigroup && adduser -S kijani -G kijanigroup
+
+# 2. Set up the production application workspace
+WORKDIR /home/kijani/app
+
+# 3. Install python3 cleanly for a minimal web server engine
+RUN apk add --no-cache python3 && \
+    rm -rf /var/cache/apk/*
+
+# 4. Create a lightweight health endpoint and server script inline
+RUN echo 'import http.server, sys; \
+class H(http.server.BaseHTTPRequestHandler): \
+    def do_GET(self): \
+        if self.path == "/health": self.send_response(200); self.end_headers(); self.wfile.write(b"OK") \
+        else: self.send_response(404); self.end_headers() \
+http.server.HTTPServer(("0.0.0.0", 3001), H).serve_forever()' > server.py
+
+# 5. Lock down directory ownership to the non-root user
+RUN chown -R kijani:kijanigroup /home/kijani/app
+
+# 6. Switch down to the non-root user context
+USER kijani
+
+# Expose production port
+EXPOSE 3001
+
+# 7. Robust container health probe utilizing native python capabilities 
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
+  CMD python3 -c 'import urllib.request; sys.exit(0 if urllib.request.urlopen("http://localhost:3001/health").getcode() == 200 else 1)'
+
+# Start the application server
+CMD ["python3", "server.py"]
