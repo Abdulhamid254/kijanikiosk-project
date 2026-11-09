@@ -1,0 +1,34 @@
+======================================================================
+REQUIREMENT 2: REGISTRY PUSH & COLD PULL VERIFICATION LOG
+======================================================================
+
+--- 1. VERSION STRING COMPUTATION COMMANDS & OUTPUT ---
+$ VERSION=$(node -p "require('./package.json').version")
+$ GITSHA=$(git rev-parse --short=7 HEAD)
+$ TAG="${VERSION}-${GITSHA}"
+$ echo ${TAG}
+1.0.0-e0c5022
+
+--- 2. DOCKER PUSH OUTPUT ---
+$ sudo docker push docker.io/abduli254/kk-payments:1.0.0-e0c5022
+The push refers to repository [docker.io/abduli254/kk-payments]
+73d09497328c: Layer already exists 
+44136fa355b3: Already exists 
+44cf07d57ee4: Layer already exists 
+92c56a81bea9: Already exists 
+c5d78dbb8838: Layer already exists 
+a683cdd2baaa: Pushed 
+43ab87fcb9e7: Layer already exists 
+5717449bad90: Layer already exists 
+1.0.0-e0c5022: digest: sha256:2e7641a30b698bd2af19c0dfbd6fefdff6d28f0313392e58032ff3b1b8650ac3 size: 856
+
+--- 3. LOCAL CACHE EVICTION & COLD PULL VERIFICATION ---
+$ sudo docker rmi docker.io/abduli254/kk-payments:1.0.0-e0c5022
+Untagged: abduli254/kk-payments:1.0.0-e0c5022
+Deleted: sha256:2e7641a30b698bd2af19c0dfbd6fefdff6d28f0313392e58032ff3b1b8650ac3
+
+$ sudo docker pull docker.io/abduli254/kk-payments:1.0.0-e0c5022
+1.0.0-e0c5022: Pulling from abduli254/kk-payments
+Digest: sha256:2e7641a30b698bd2af19c0dfbd6fefdff6d28f0313392e58032ff3b1b8650ac3
+Status: Downloaded newer image for abduli254/kk-payments:1.0.0-e0c5022
+docker.io/abduli254/kk-payments:1.0.0-e0c5022
