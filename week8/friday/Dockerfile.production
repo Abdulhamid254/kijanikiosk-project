@@ -30,9 +30,9 @@ USER kijani
 # Expose production port
 EXPOSE 3001
 
-# 7. Robust container health probe utilizing native python capabilities 
-HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-  CMD python3 -c 'import urllib.request; sys.exit(0 if urllib.request.urlopen("http://localhost:3001/health").getcode() == 200 else 1)'
+# 7. Robust container health probe utilizing native python capabilities (Challenge B Adjusted)
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
+  CMD python3 -c 'import urllib.request, sys; sys.exit(0 if urllib.request.urlopen("http://localhost:3001/health").getcode() == 200 else 1)'
 
-# Start the application server
+# Start the application server (exec-form)
 CMD ["python3", "server.py"]
