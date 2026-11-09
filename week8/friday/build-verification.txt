@@ -1,4 +1,4 @@
-=== OUTPUT OF DOCKER BUILD --NO-CACHE ===
+=== 1. docker build --no-cache OUTPUT ===
 #0 building with "default" instance using docker driver
 
 #1 [internal] load build definition from Dockerfile.production
@@ -6,7 +6,7 @@
 #1 DONE 0.0s
 
 #2 [internal] load metadata for docker.io/library/alpine:3.18
-#2 DONE 1.0s
+#2 DONE 0.9s
 
 #3 [internal] load .dockerignore
 #3 transferring context: 2B done
@@ -17,34 +17,34 @@
 #4 CACHED
 
 #5 [2/6] RUN addgroup -S kijanigroup && adduser -S kijani -G kijanigroup
-#5 DONE 0.2s
+#5 DONE 0.3s
 
 #6 [3/6] WORKDIR /home/kijani/app
 #6 DONE 0.1s
 
 #7 [4/6] RUN apk add --no-cache python3 &&     rm -rf /var/cache/apk/*
-#7 0.196 fetch https://dl-cdn.alpinelinux.org/alpine/v3.18/main/x86_64/APKINDEX.tar.gz
-#7 1.327 fetch https://dl-cdn.alpinelinux.org/alpine/v3.18/community/x86_64/APKINDEX.tar.gz
-#7 3.747 (1/17) Installing libexpat (2.7.0-r0)
-#7 3.896 (2/17) Installing libbz2 (1.0.8-r5)
-#7 3.987 (3/17) Installing libffi (3.4.4-r2)
-#7 4.061 (4/17) Installing gdbm (1.23-r1)
-#7 4.150 (5/17) Installing xz-libs (5.4.3-r1)
-#7 4.339 (6/17) Installing libgcc (12.2.1_git20220924-r10)
-#7 4.458 (7/17) Installing libstdc++ (12.2.1_git20220924-r10)
-#7 5.531 (8/17) Installing mpdecimal (2.5.1-r2)
-#7 7.530 (9/17) Installing ncurses-terminfo-base (6.4_p20230506-r0)
-#7 7.716 (10/17) Installing libncursesw (6.4_p20230506-r0)
-#7 8.082 (11/17) Installing libpanelw (6.4_p20230506-r0)
-#7 8.150 (12/17) Installing readline (8.2.1-r1)
-#7 8.401 (13/17) Installing sqlite-libs (3.41.2-r4)
-#7 9.210 (14/17) Installing python3 (3.11.12-r1)
-#7 22.61 (15/17) Installing python3-pycache-pyc0 (3.11.12-r1)
-#7 33.94 (16/17) Installing pyc (0.1-r0)
-#7 34.00 (17/17) Installing python3-pyc (3.11.12-r1)
-#7 34.07 Executing busybox-1.36.1-r7.trigger
-#7 34.08 OK: 51 MiB in 32 packages
-#7 DONE 34.2s
+#7 0.552 fetch https://dl-cdn.alpinelinux.org/alpine/v3.18/main/x86_64/APKINDEX.tar.gz
+#7 1.652 fetch https://dl-cdn.alpinelinux.org/alpine/v3.18/community/x86_64/APKINDEX.tar.gz
+#7 4.519 (1/17) Installing libexpat (2.7.0-r0)
+#7 4.771 (2/17) Installing libbz2 (1.0.8-r5)
+#7 5.493 (3/17) Installing libffi (3.4.4-r2)
+#7 5.721 (4/17) Installing gdbm (1.23-r1)
+#7 5.930 (5/17) Installing xz-libs (5.4.3-r1)
+#7 6.350 (6/17) Installing libgcc (12.2.1_git20220924-r10)
+#7 6.554 (7/17) Installing libstdc++ (12.2.1_git20220924-r10)
+#7 8.951 (8/17) Installing mpdecimal (2.5.1-r2)
+#7 9.220 (9/17) Installing ncurses-terminfo-base (6.4_p20230506-r0)
+#7 9.343 (10/17) Installing libncursesw (6.4_p20230506-r0)
+#7 9.761 (11/17) Installing libpanelw (6.4_p20230506-r0)
+#7 9.830 (12/17) Installing readline (8.2.1-r1)
+#7 10.14 (13/17) Installing sqlite-libs (3.41.2-r4)
+#7 11.02 (14/17) Installing python3 (3.11.12-r1)
+#7 28.39 (15/17) Installing python3-pycache-pyc0 (3.11.12-r1)
+#7 36.39 (16/17) Installing pyc (0.1-r0)
+#7 36.45 (17/17) Installing python3-pyc (3.11.12-r1)
+#7 36.51 Executing busybox-1.36.1-r7.trigger
+#7 36.52 OK: 51 MiB in 32 packages
+#7 DONE 36.7s
 
 #8 [5/6] RUN echo 'import http.server, sys; class H(http.server.BaseHTTPRequestHandler):     def do_GET(self):         if self.path == "/health": self.send_response(200); self.end_headers(); self.wfile.write(b"OK")         else: self.send_response(404); self.end_headers() http.server.HTTPServer(("0.0.0.0", 3001), H).serve_forever()' > server.py
 #8 DONE 0.2s
@@ -54,21 +54,22 @@
 
 #10 exporting to image
 #10 exporting layers
-#10 exporting layers 1.7s done
-#10 exporting manifest sha256:f3e486dc52aebccc7230d54a19d9bd9fccdd3cf254d0bf71ca4779700e98a42a 0.0s done
-#10 exporting config sha256:ff532ae6ab5a7efe118c107f9f7c8cdbcab3448d2e2c3ae1534eb22207cdaee1 0.0s done
-#10 exporting attestation manifest sha256:eefa0e174d5ecce032ba397fafce8d623f228192b815d89b7c91d091e80f038b 0.0s done
-#10 exporting manifest list sha256:7ac606aad0f6cfbec2a1bb6e6c338edd1a8f7d36ea2cf71048349ce64d6fb578 0.0s done
-#10 naming to kijani-registry.internal/kk-payments:local done
-#10 unpacking to kijani-registry.internal/kk-payments:local
-#10 unpacking to kijani-registry.internal/kk-payments:local 0.4s done
-#10 DONE 2.2s
+#10 exporting layers 4.8s done
+#10 exporting manifest sha256:d819eed1cd2da737e4e25e1382bcc58e4ee08f0cd806d5fe3a5d0c10f13ed387 0.0s done
+#10 exporting config sha256:a84f66906f882c45d88af75ce9ca11031f6abf0e279f90da989461b57bede92a 0.0s done
+#10 exporting attestation manifest sha256:4150bda6cae4aec1025f95f2addfd992f839118a50709011f4e5e89c5e2c5c55 0.0s done
+#10 exporting manifest list sha256:38d7d5f0f27835708b3bbd0039ae80d0cb073a067260911b865f3df5c87b91aa 0.0s done
+#10 naming to docker.io/library/kk-payments:latest done
+#10 unpacking to docker.io/library/kk-payments:latest
+#10 unpacking to docker.io/library/kk-payments:latest 0.5s done
+#10 DONE 5.4s
 
-=== DOCKER IMAGES SIZE PROFILES ===
-IMAGE                                        ID             DISK USAGE   CONTENT SIZE   EXTRA
-kijani-registry.internal/kk-payments:local   7ac606aad0f6       73.3MB         19.8MB        
+=== 2. docker images SHOWING SIZE ===
+IMAGE                ID             DISK USAGE   CONTENT SIZE   EXTRA
+kk-payments:latest   38d7d5f0f278       73.3MB         19.8MB        
 
-=== WHOAMI VERIFICATION ===
+=== 3. RUNTIME USER VERIFICATION (whoami) ===
 kijani
 
-=== TSC ABSENCE VERIFICATION ===
+=== 4. DEV DEPENDENCY SANITIZATION (which tsc) ===
+[Empty string - tsc not found]
