@@ -1,0 +1,26 @@
+==========================================================
+REQUIREMENT 4: DYNAMIC SELF-HEALING & POD FAILOVER TIMELINE
+==========================================================
+Test Execution Date: Mon Nov  9 10:49:12 PM EAT 2026
+
+--- 1. INITIAL FOOTPRINT STATE ---
+NAME                           READY   STATUS    RESTARTS   AGE
+kk-payments-7ff9ff7b4d-rrk4c   1/1     Running   0          2m38s
+kk-payments-7ff9ff7b4d-z8hvb   1/1     Running   0          44m
+
+[T0 TIMESTAMP - INITIATING POD DELETION AT Mon Nov  9 10:49:49 PM EAT 2026]
+Executing: kubectl delete pod kk-payments-7ff9ff7b4d-rrk4c --now
+NAME                           READY   STATUS    RESTARTS   AGE
+kk-payments-7ff9ff7b4d-rrk4c   1/1     Running   0          3m2s
+kk-payments-7ff9ff7b4d-z8hvb   1/1     Running   0          45m
+kk-payments-7ff9ff7b4d-rrk4c   1/1     Terminating   0          3m2s
+kk-payments-7ff9ff7b4d-rrk4c   1/1     Terminating   0          3m3s
+kk-payments-7ff9ff7b4d-w5lm7   0/1     Pending       0          0s
+kk-payments-7ff9ff7b4d-w5lm7   0/1     Pending       0          0s
+kk-payments-7ff9ff7b4d-w5lm7   0/1     ContainerCreating   0          0s
+kk-payments-7ff9ff7b4d-w5lm7   0/1     ContainerCreating   0          0s
+kk-payments-7ff9ff7b4d-w5lm7   0/1     Running             0          0s
+kk-payments-7ff9ff7b4d-rrk4c   0/1     Error               0          3m5s
+kk-payments-7ff9ff7b4d-rrk4c   0/1     Error               0          3m5s
+kk-payments-7ff9ff7b4d-rrk4c   0/1     Error               0          3m5s
+kk-payments-7ff9ff7b4d-w5lm7   1/1     Running             0          5s
